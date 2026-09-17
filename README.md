@@ -91,8 +91,14 @@ curl -fsSL https://cdn.jsdelivr.net/gh/ZT1314888/ccstatusline-context-color@v1.0
 curl -fsSL https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-color/main/install.js | NODE_USE_ENV_PROXY=1 node
 ```
 
-**完全离线**：把 `context-color.js` 和 `install.js` 先下载到本地，再
-`CONTEXT_COLOR_BASE_URL=<本地目录的 file:// 或 http:// 地址> node install.js`。
+**内网 / 完全离线**：把 `install.js` 和 `context-color.js` 下载到同一个目录，
+在该目录起个静态服务再指定下载源即可（node 的 `fetch` **不支持** `file://`，必须走 http）：
+
+```bash
+cd <存放这两个文件的目录>
+python -m http.server 8941 --bind 127.0.0.1 &
+CONTEXT_COLOR_BASE_URL=http://127.0.0.1:8941 node install.js
+```
 
 ### 方式二：手动配置
 
