@@ -17,7 +17,9 @@ Sonnet 5 | 265,696 (27%) | master (+0, -0)
 
 ## 安装
 
-一条命令搞定：装好 ccstatusline、把脚本放到 Claude 配置目录、并把 widget 拼进状态栏布局。
+### 方式一：一行命令（推荐）
+
+装好 ccstatusline、把脚本放进 Claude 配置目录、并把 widget 拼进状态栏布局，三步一次做完。
 
 **macOS / Linux / Git Bash**
 
@@ -37,6 +39,22 @@ curl.exe -fsSL https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-
 > 直接导致 `SyntaxError`、安装器根本跑不起来。
 > `curl.exe -o` 落盘是二进制写入，源码逐字节送达，这一步不能省。
 
+**raw 不通时换镜像。** `raw.githubusercontent.com` 在部分网络下会被直接屏蔽，
+把上面命令里的这段基址
+
+```
+https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-color/main
+```
+
+整体替换成 jsDelivr 镜像（已实测可用）即可：
+
+```bash
+curl -fsSL https://cdn.jsdelivr.net/gh/ZT1314888/ccstatusline-context-color@main/install.js | node
+```
+
+> 注意：这一步替换只影响**拉取 install.js 本身**。install.js 内部下载 widget 时会自己
+> 依次尝试 raw 与 jsDelivr，不需要你再管。
+
 装完重启 Claude Code 即可。安装器只做三件事，且每一步都可回退：
 
 | 动作 | 目标文件 | 说明 |
@@ -53,17 +71,6 @@ curl.exe -fsSL https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-
 
 安装器是幂等的，重复运行是彻底的 no-op：不会重复插入 widget，也不会改动任何字节。
 
-**下载失败怎么办**
-
-`raw.githubusercontent.com` 在部分网络下只能**间歇性**连通（同一分钟内可能一会儿通一会儿断），
-安装器已内置 3 次重试。若仍失败，用 `CONTEXT_COLOR_BASE_URL` 指向任意镜像即可，
-该地址下要能取到 `context-color.js`：
-
-```bash
-CONTEXT_COLOR_BASE_URL=https://<镜像>/ZT1314888/ccstatusline-context-color/main \
-  curl -fsSL https://<镜像>/ZT1314888/ccstatusline-context-color/main/install.js | node
-```
-
 **走了代理的同学注意**：node 的原生 `fetch` **不读** `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY`，
 所以会出现「`curl` 能下、安装器却下不动」的怪现象。Node 24 及以上可以打开 `NODE_USE_ENV_PROXY=1`
 让它走代理——注意这个变量要加在 `node` 一侧，加在 `curl` 上不起作用：
@@ -71,6 +78,13 @@ CONTEXT_COLOR_BASE_URL=https://<镜像>/ZT1314888/ccstatusline-context-color/mai
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-color/main/install.js | NODE_USE_ENV_PROXY=1 node
 ```
+
+**完全离线**：把 `context-color.js` 和 `install.js` 先下载到本地，再
+`CONTEXT_COLOR_BASE_URL=<本地目录的 file:// 或 http:// 地址> node install.js`。
+
+### 方式二：手动配置
+
+不想跑安装器就照下面三步手动做，效果完全一致。参考 [§手动配置](#手动配置)。
 
 ---
 
@@ -92,7 +106,8 @@ ccstatusline 自带的 context widget 无法同时满足下面三点，这正是
 ccstatusline-context-color/
 ├── context-color.js   # widget 本体，被 ccstatusline 调用
 ├── install.js         # 一键安装器
-└── README.md
+├── README.md
+└── LICENSE            # Apache-2.0
 ```
 
 ---
@@ -107,9 +122,21 @@ ccstatusline-context-color/
 
 ---
 
-## 手动安装
+## 手动配置
 
-不想跑安装器就照下面四步来，效果一致。
+不想跑安装器就照下面四步手动来，效果和一行命令完全一致。
+
+> **只把 `statusLine` 加进 `settings.json` 是不够的。**
+> 那只让状态栏跑起来，渲染的是 ccstatusline 自己的**默认布局**（模型名、目录之类），
+> 不包含本项目的 token 计数与阈值配色。想要预览里那个 `265,696 (27%)`，下面三样缺一不可：
+>
+> | # | 做什么 | 作用 |
+> | --- | --- | --- |
+> | 1 | `settings.json` 里加 `statusLine` 指向 ccstatusline | 让状态栏跑起来 |
+> | 2 | 把 `context-color.js` 放进 Claude 配置目录 | 提供那段带颜色的数字 |
+> | 3 | ccstatusline 配置里加一条 `custom-command` widget 指向它 | 把它拼进布局 |
+>
+> 漏掉第 2 或第 3 步，状态栏都只是 ccstatusline 的默认样子。
 
 ### 1. 把 ccstatusline 设为状态栏
 
@@ -135,6 +162,13 @@ ccstatusline-context-color/
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-color/main/context-color.js \
+  -o ~/.claude/context-color.js
+```
+
+raw 被屏蔽时，把域名部分换成 jsDelivr 即可：
+
+```bash
+curl -fsSL https://cdn.jsdelivr.net/gh/ZT1314888/ccstatusline-context-color@main/context-color.js \
   -o ~/.claude/context-color.js
 ```
 

@@ -13,8 +13,14 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const BASE = (process.env.CONTEXT_COLOR_BASE_URL
-    || 'https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-color/main').replace(/\/+$/, '');
+// raw is canonical, but it is blocked outright on some networks, so
+// jsDelivr serves as the fallback.
+const BASES = process.env.CONTEXT_COLOR_BASE_URL
+    ? [process.env.CONTEXT_COLOR_BASE_URL.replace(/\/+$/, '')]
+    : [
+        'https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-color/main',
+        'https://cdn.jsdelivr.net/gh/ZT1314888/ccstatusline-context-color@main',
+    ];
 
 const CLAUDE_DIR = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
 const WIDGET = path.join(CLAUDE_DIR, 'context-color.js');
@@ -100,26 +106,34 @@ function isOurs(item) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// raw.githubusercontent.com is reachable only intermittently from some
-// networks, so a single failed request is not worth giving up over.
+function host(url) {
+    return url.replace(/^https?:\/\//, '').split('/')[0];
+}
+
+// Each base gets two attempts, each bounded by a timeout — an unbounded
+// connect that hangs is worse than a fast failure onto the next base.
 async function download() {
-    let last;
-    for (let attempt = 0; attempt < 3; attempt++) {
-        if (attempt)
-            await sleep(500 * attempt);
-        try {
-            const res = await fetch(`${BASE}/context-color.js`);
-            if (!res.ok)
-                throw new Error(`HTTP ${res.status}`);
-            const text = await res.text();
-            if (!text.startsWith('#!/usr/bin/env node'))
-                throw new Error('下载到的内容不是脚本，URL 可能被代理或 CDN 改写了');
-            return text;
-        } catch (e) {
-            last = e;
+    const tried = [];
+    for (const base of BASES) {
+        for (let attempt = 0; attempt < 2; attempt++) {
+            if (attempt)
+                await sleep(500);
+            try {
+                const res = await fetch(`${base}/context-color.js`, {
+                    signal: AbortSignal.timeout(8000),
+                });
+                if (!res.ok)
+                    throw new Error(`HTTP ${res.status}`);
+                const text = await res.text();
+                if (!text.startsWith('#!/usr/bin/env node'))
+                    throw new Error('下载到的内容不是脚本，URL 可能被代理或 CDN 改写了');
+                return text;
+            } catch (e) {
+                tried.push(`${host(base)} ${e.message}`);
+            }
         }
     }
-    throw new Error(`${last.message}（已重试 3 次，可用 CONTEXT_COLOR_BASE_URL 指定镜像源）`);
+    throw new Error(`所有下载源均失败：${tried.join('；')}。可用 CONTEXT_COLOR_BASE_URL 指定镜像源`);
 }
 
 function installWidget(source) {
