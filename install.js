@@ -13,8 +13,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-// raw is canonical, but it is blocked outright on some networks, so
-// jsDelivr serves as the fallback.
+// raw is canonical but is blocked outright on some networks. jsDelivr is
+// reachable on exactly the networks where raw is not, so the two cover each
+// other. (raw.githack looks tempting but node cannot reach it where raw is
+// blocked, so it only lengthens the failure path.)
 const BASES = process.env.CONTEXT_COLOR_BASE_URL
     ? [process.env.CONTEXT_COLOR_BASE_URL.replace(/\/+$/, '')]
     : [

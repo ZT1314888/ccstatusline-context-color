@@ -46,14 +46,21 @@ curl.exe -fsSL https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-
 https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-color/main
 ```
 
-整体替换成 jsDelivr 镜像（已实测可用）即可：
+整体替换成下面任意一个镜像即可（两个都实测可用）：
+
+| 镜像 | 基址 | 特点 |
+| --- | --- | --- |
+| jsDelivr | `https://cdn.jsdelivr.net/gh/ZT1314888/ccstatusline-context-color@main` | 最稳，实测 raw 被屏蔽时仍可直连；但分支引用缓存久（可达数小时） |
+| raw.githack | `https://raw.githack.com/ZT1314888/ccstatusline-context-color/main` | 紧跟 GitHub，推送后很快生效；可用性视网络而定 |
+
+例如把拉取地址换成 jsDelivr：
 
 ```bash
 curl -fsSL https://cdn.jsdelivr.net/gh/ZT1314888/ccstatusline-context-color@main/install.js | node
 ```
 
-> 注意：这一步替换只影响**拉取 install.js 本身**。install.js 内部下载 widget 时会自己
-> 依次尝试 raw 与 jsDelivr，不需要你再管。
+> 这一步替换只影响**拉取 install.js 本身**。install.js 内部下载 widget 时会自己按
+> raw → jsDelivr 依次尝试，不需要你再管。
 
 装完重启 Claude Code 即可。安装器只做三件事，且每一步都可回退：
 
