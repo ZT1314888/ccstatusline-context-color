@@ -98,14 +98,28 @@ function isOurs(item) {
         && typeof item.commandPath === 'string' && item.commandPath.includes('context-color.js');
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// raw.githubusercontent.com is reachable only intermittently from some
+// networks, so a single failed request is not worth giving up over.
 async function download() {
-    const res = await fetch(`${BASE}/context-color.js`);
-    if (!res.ok)
-        throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    if (!text.startsWith('#!/usr/bin/env node'))
-        throw new Error('下载到的内容不是脚本，URL 可能被代理或 CDN 改写了');
-    return text;
+    let last;
+    for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt)
+            await sleep(500 * attempt);
+        try {
+            const res = await fetch(`${BASE}/context-color.js`);
+            if (!res.ok)
+                throw new Error(`HTTP ${res.status}`);
+            const text = await res.text();
+            if (!text.startsWith('#!/usr/bin/env node'))
+                throw new Error('下载到的内容不是脚本，URL 可能被代理或 CDN 改写了');
+            return text;
+        } catch (e) {
+            last = e;
+        }
+    }
+    throw new Error(`${last.message}（已重试 3 次，可用 CONTEXT_COLOR_BASE_URL 指定镜像源）`);
 }
 
 function installWidget(source) {

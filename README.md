@@ -53,7 +53,24 @@ curl.exe -fsSL https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-
 
 安装器是幂等的，重复运行是彻底的 no-op：不会重复插入 widget，也不会改动任何字节。
 
-**自定义下载源**：设置环境变量 `CONTEXT_COLOR_BASE_URL` 可指向你的 fork 或本地服务，默认走上面的 GitHub raw 地址。
+**下载失败怎么办**
+
+`raw.githubusercontent.com` 在部分网络下只能**间歇性**连通（同一分钟内可能一会儿通一会儿断），
+安装器已内置 3 次重试。若仍失败，用 `CONTEXT_COLOR_BASE_URL` 指向任意镜像即可，
+该地址下要能取到 `context-color.js`：
+
+```bash
+CONTEXT_COLOR_BASE_URL=https://<镜像>/ZT1314888/ccstatusline-context-color/main \
+  curl -fsSL https://<镜像>/ZT1314888/ccstatusline-context-color/main/install.js | node
+```
+
+**走了代理的同学注意**：node 的原生 `fetch` **不读** `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY`，
+所以会出现「`curl` 能下、安装器却下不动」的怪现象。Node 24 及以上可以打开 `NODE_USE_ENV_PROXY=1`
+让它走代理——注意这个变量要加在 `node` 一侧，加在 `curl` 上不起作用：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-color/main/install.js | NODE_USE_ENV_PROXY=1 node
+```
 
 ---
 
