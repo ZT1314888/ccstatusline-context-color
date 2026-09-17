@@ -50,14 +50,19 @@ https://raw.githubusercontent.com/ZT1314888/ccstatusline-context-color/main
 
 | 镜像 | 基址 | 特点 |
 | --- | --- | --- |
-| jsDelivr | `https://cdn.jsdelivr.net/gh/ZT1314888/ccstatusline-context-color@main` | 最稳，实测 raw 被屏蔽时仍可直连；但分支引用缓存久（可达数小时） |
-| raw.githack | `https://raw.githack.com/ZT1314888/ccstatusline-context-color/main` | 紧跟 GitHub，推送后很快生效；可用性视网络而定 |
+| jsDelivr | `https://cdn.jsdelivr.net/gh/ZT1314888/ccstatusline-context-color@v1.0.0` | 最稳，实测 raw 被屏蔽时仍可直连；tag 引用即时生效 |
+| raw.githack | `https://raw.githack.com/ZT1314888/ccstatusline-context-color/main` | 紧跟 GitHub；可用性视网络而定 |
 
 例如把拉取地址换成 jsDelivr：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/ZT1314888/ccstatusline-context-color@main/install.js | node
+curl -fsSL https://cdn.jsdelivr.net/gh/ZT1314888/ccstatusline-context-color@v1.0.0/install.js | node
 ```
+
+> **jsDelivr 请用 tag 地址（如上 `@v1.0.0`），不要用 `@main`。**
+> 分支引用会被 jsDelivr 缓存最长 12 小时（响应头 `s-maxage=43200`），
+> 刚推送完去看镜像很可能还是旧版；tag 引用则是即时生效的。
+> 发新版时打个新 tag，并把上面这行的版本号同步更新即可。
 
 > 这一步替换只影响**拉取 install.js 本身**。install.js 内部下载 widget 时会自己按
 > raw → jsDelivr 依次尝试，不需要你再管。
