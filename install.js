@@ -72,7 +72,8 @@ function toSlashes(p) {
 
 function readJson(file) {
     try {
-        return JSON.parse(fs.readFileSync(file, 'utf8'));
+        // Editors on Windows sometimes leave a UTF-8 BOM behind.
+        return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
     } catch {
         return null;
     }
